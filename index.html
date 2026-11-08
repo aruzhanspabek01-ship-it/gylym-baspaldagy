@@ -1,0 +1,708 @@
+<meta charset="utf-8">
+<title>Ғылым Баспалдағы</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Noto+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: ойын-көрсетілім баспалдағы — жоғарыда саты жолағы мен таймер, ортада бір сұрақ картасы */
+:root{
+  --bg:#eaeef5; --surface:#ffffff; --surface-2:#dfe6f1; --ink:#16203a; --muted:#5b6880;
+  --line:#c8d2e3; --teal:#14776b; --teal-soft:#d6ece8; --flame:#d9602a; --flame-soft:#fbe4d7;
+  --ok:#217a52; --ok-soft:#d8efe2; --no:#c0392f; --no-soft:#fbe0dd; --gold:#b07d13; --gold-soft:#faecc8;
+  --btn-fg:#ffffff; --shadow:0 10px 30px rgba(22,32,58,.10);
+  --display:'Rubik',system-ui,'Segoe UI',sans-serif;
+  --body:'Noto Sans',system-ui,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0f1724; --surface:#172133; --surface-2:#1f2b42; --ink:#e9eef8; --muted:#9dabc6;
+  --line:#2d3a55; --teal:#3ecbb3; --teal-soft:#15332f; --flame:#ff9158; --flame-soft:#3a2317;
+  --ok:#54cf96; --ok-soft:#14321f; --no:#ff7a6b; --no-soft:#3a1c1c; --gold:#e8b53c; --gold-soft:#36290f;
+  --btn-fg:#06201c; --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1724; --surface:#172133; --surface-2:#1f2b42; --ink:#e9eef8; --muted:#9dabc6;
+  --line:#2d3a55; --teal:#3ecbb3; --teal-soft:#15332f; --flame:#ff9158; --flame-soft:#3a2317;
+  --ok:#54cf96; --ok-soft:#14321f; --no:#ff7a6b; --no-soft:#3a1c1c; --gold:#e8b53c; --gold-soft:#36290f;
+  --btn-fg:#06201c; --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 40px}
+.wrap{max-width:700px; margin:0 auto}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0}
+button{font:inherit; cursor:pointer}
+.tnum{font-variant-numeric:tabular-nums}
+
+body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); z-index:10; background:var(--bg)}
+#bar{position:sticky; top:env(safe-area-inset-top,0px); z-index:9; background:var(--bg); padding-block:10px 8px}
+#bar .row{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+#bar .tag{font-family:var(--display); font-weight:700; font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+#bar .spacer{flex:1; min-width:0}
+.pill{display:inline-flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--line);
+  border-radius:999px; padding:5px 11px; font-size:13px; font-weight:700; font-family:var(--display)}
+.pill.score{background:var(--teal-soft); border-color:transparent; color:var(--teal)}
+.pill.time{background:var(--flame-soft); border-color:transparent; color:var(--flame)}
+.pill.time.warn{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.45}}
+.dots{display:flex; gap:4px; margin-top:9px}
+.dots i{flex:1; height:7px; border-radius:99px; background:var(--surface-2); position:relative}
+.dots i.safe{background:var(--gold-soft)}
+.dots i.pass{background:var(--teal)}
+.dots i.now{background:var(--flame)}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); padding:22px}
+.card+.card{margin-top:14px}
+.eyebrow{font-family:var(--display); font-weight:700; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+
+#start h1{font-size:clamp(28px,7.5vw,44px); font-weight:800; line-height:1.03; letter-spacing:-.02em; margin-top:4px}
+#start h1 span{color:var(--flame)}
+.lead{color:var(--muted); margin:12px 0 0; max-width:50ch}
+.fields{display:flex; gap:12px; flex-wrap:wrap; margin-top:20px}
+.field{flex:1 1 200px; min-width:0; display:flex; flex-direction:column; gap:6px}
+label{font-size:13px; font-weight:700; font-family:var(--display); color:var(--muted)}
+input[type=text],select{width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--line);
+  background:var(--surface-2); color:var(--ink); font:inherit}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--flame); outline-offset:2px}
+.rules{display:grid; gap:9px; margin-top:18px}
+.rule{display:flex; gap:11px; align-items:flex-start; background:var(--surface-2); border-radius:13px; padding:11px 13px}
+.rule .ic{flex:0 0 28px; height:28px; border-radius:9px; background:var(--surface); display:grid; place-items:center; font-size:15px}
+.rule b{font-family:var(--display); font-size:15px; display:block}
+.rule small{color:var(--muted)}
+.subjects{display:flex; flex-wrap:wrap; gap:7px; margin-top:16px}
+.stn{display:inline-flex; align-items:center; gap:6px; background:var(--surface-2); border-radius:999px; padding:5px 12px; font-size:13.5px; font-weight:600}
+
+.btn{border:none; border-radius:13px; padding:14px 22px; font-family:var(--display); font-weight:700; font-size:16px;
+  background:var(--teal); color:var(--btn-fg); transition:transform .12s ease, filter .12s ease}
+.btn:hover{filter:brightness(1.07)} .btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--line)}
+a.btn{display:inline-block; text-decoration:none; text-align:center; cursor:pointer}
+.btn.flame{background:var(--flame); color:#fff}
+.btn[disabled]{opacity:.4; cursor:not-allowed}
+.btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; align-items:center}
+
+.qhead{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px}
+.chip{font-family:var(--display); font-weight:700; font-size:12px; letter-spacing:.05em; text-transform:uppercase;
+  background:var(--surface-2); color:var(--muted); border-radius:999px; padding:4px 10px}
+.chip.lvl{background:var(--teal-soft); color:var(--teal)}
+.chip.prize{background:var(--gold-soft); color:var(--gold)}
+.qtext{font-family:var(--display); font-weight:700; font-size:clamp(19px,4.6vw,24px); line-height:1.3}
+.qsub{color:var(--muted); font-size:14px; margin-top:6px}
+.opts{display:grid; gap:10px; margin-top:18px}
+.opt{display:flex; align-items:flex-start; gap:11px; text-align:left; width:100%; background:var(--surface-2);
+  border:2px solid transparent; border-radius:14px; padding:13px 15px; color:var(--ink); font:inherit; line-height:1.4}
+.opt:hover{border-color:var(--line)}
+.opt .key{flex:0 0 26px; height:26px; border-radius:8px; background:var(--surface); display:grid; place-items:center;
+  font-family:var(--display); font-weight:700; font-size:13px}
+.opt.good{background:var(--ok-soft); border-color:var(--ok)}
+.opt.bad{background:var(--no-soft); border-color:var(--no)}
+.opt.gone{opacity:.25; pointer-events:none}
+.opt[disabled]{cursor:default}
+.tf{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px}
+.tf .opt{justify-content:center; font-family:var(--display); font-weight:700; font-size:17px}
+.match{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px}
+.mcol{display:grid; gap:9px; align-content:start}
+.mitem{background:var(--surface-2); border:2px solid transparent; border-radius:12px; padding:11px 12px; font:inherit;
+  color:var(--ink); text-align:left; line-height:1.35; position:relative; min-width:0}
+.mitem.sel{border-color:var(--flame)}
+.mitem.linked{background:var(--teal-soft); border-color:var(--teal)}
+.mitem.good{background:var(--ok-soft); border-color:var(--ok)}
+.mitem.bad{background:var(--no-soft); border-color:var(--no)}
+.mitem .num{position:absolute; top:-8px; right:-6px; width:22px; height:22px; border-radius:50%; background:var(--teal);
+  color:var(--surface); display:grid; place-items:center; font-size:12px; font-weight:700; font-family:var(--display)}
+.order{display:grid; gap:9px; margin-top:18px}
+.oitem{display:flex; align-items:center; gap:10px; background:var(--surface-2); border:2px solid transparent;
+  border-radius:12px; padding:12px 14px; font:inherit; color:var(--ink); text-align:left}
+.oitem .num{flex:0 0 26px; height:26px; border-radius:50%; background:var(--surface); display:grid; place-items:center;
+  font-family:var(--display); font-weight:700; font-size:13px; color:var(--muted)}
+.oitem.sel{border-color:var(--teal)} .oitem.sel .num{background:var(--teal); color:var(--surface)}
+.oitem.good{background:var(--ok-soft); border-color:var(--ok)} .oitem.bad{background:var(--no-soft); border-color:var(--no)}
+.answerline{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap}
+.answerline input{flex:1 1 220px}
+
+.helpers{display:flex; gap:9px; margin-top:16px; flex-wrap:wrap}
+.help{flex:1 1 140px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--gold-soft);
+  color:var(--gold); border:none; border-radius:12px; padding:11px 14px; font-family:var(--display); font-weight:700; font-size:14px}
+.help[disabled]{opacity:.35; cursor:not-allowed}
+.hintbox{margin-top:14px; background:var(--flame-soft); border-radius:12px; padding:12px 14px; font-size:15px; display:none}
+.hintbox.show{display:block}
+.feedback{margin-top:16px; border-radius:14px; padding:14px 16px; display:none}
+.feedback.show{display:block}
+.feedback.yes{background:var(--ok-soft); border:1px solid var(--ok)}
+.feedback.no{background:var(--no-soft); border:1px solid var(--no)}
+.feedback b{font-family:var(--display); display:block; margin-bottom:3px}
+
+.result{border-radius:20px; padding:26px; text-align:center; border:2px solid var(--teal);
+  background:linear-gradient(140deg,var(--teal-soft),var(--surface) 65%)}
+.result.lose{border-color:var(--no); background:linear-gradient(140deg,var(--no-soft),var(--surface) 65%)}
+.result.win{border-color:var(--gold); background:linear-gradient(140deg,var(--gold-soft),var(--surface) 65%)}
+.result .crown{font-size:46px; line-height:1}
+.result .rank{font-family:var(--display); font-weight:800; font-size:clamp(24px,6.5vw,34px); line-height:1.1; margin:6px 0}
+.result.win .rank{color:var(--gold)} .result.lose .rank{color:var(--no)}
+.result .who{font-size:17px; font-weight:700}
+.bigscore{font-family:var(--display); font-weight:800; font-size:clamp(34px,10vw,50px); line-height:1.05}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(104px,1fr)); gap:10px; margin-top:18px}
+.stat{background:var(--surface-2); border-radius:13px; padding:12px; text-align:center}
+.stat b{display:block; font-family:var(--display); font-size:21px}
+.stat small{color:var(--muted); font-size:12px}
+.review{display:grid; gap:8px; margin-top:12px}
+.rev{display:flex; gap:10px; align-items:flex-start; background:var(--surface-2); border-radius:12px; padding:10px 12px; font-size:14px}
+.rev .mark{flex:0 0 22px; height:22px; border-radius:50%; display:grid; place-items:center; font-size:13px; font-weight:700; color:#fff}
+.rev .mark.y{background:var(--ok)} .rev .mark.n{background:var(--no)}
+.rev small{display:block; color:var(--muted)}
+footer{text-align:center; color:var(--muted); font-size:13px; margin-top:22px}
+@media (max-width:430px){ .match{grid-template-columns:1fr} .card{padding:18px} }
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+</style>
+
+<div class="wrap">
+  <div id="bar" hidden>
+    <div class="row">
+      <span class="tag" id="barLvl">1-саты</span>
+      <span class="spacer"></span>
+      <span class="pill time tnum" id="barTime">90</span>
+      <span class="pill score tnum" id="barScore">0 ұпай</span>
+    </div>
+    <div class="dots" id="barDots"></div>
+  </div>
+
+  <!-- БАСТАУ -->
+  <section id="start" class="card">
+    <p class="eyebrow">Жаратылыстану апталығы · 7–11 сынып</p>
+    <h1>Ғылым <span>Баспалдағы</span></h1>
+    <p class="lead">Он бес саты. Әр сатыда — бір сұрақ және бір ғана мүмкіндік.
+      Дұрыс жауап бердің — жоғары көтерілесің, қателестің — ойын сол жерде аяқталады.
+      Он бесінші сатыға шыққан оқушы <b>квест жеңімпазы</b> атанады!</p>
+    <div class="subjects" id="subjList"></div>
+    <div class="rules">
+      <div class="rule"><span class="ic">🚪</span><span><b>Бір оқушы — бір рет</b><small>Квестке қайта кіруге болмайды, сондықтан асықпа.</small></span></div>
+      <div class="rule"><span class="ic">💥</span><span><b>Бір қате — ойын бітті</b><small>Қате жауап немесе уақыт бітсе, нәтижең сол сәтте тіркеледі.</small></span></div>
+      <div class="rule"><span class="ic">🛟</span><span><b>Сенімді сатылар: 5 және 10</b><small>Оларға жеткен соң жиналған ұпайың сақталады.</small></span></div>
+      <div class="rule"><span class="ic">🎁</span><span><b>Екі көмекші</b><small>«50:50» екі қате жауапты өшіреді, «Кеңес» ишара береді. Әрқайсысы бір рет.</small></span></div>
+      <div class="rule"><span class="ic">⏱️</span><span><b>Әр сұраққа 90 секунд</b><small>Ұпай сатыға қарай өседі: 20 → 40 → 70.</small></span></div>
+    </div>
+    <div class="fields">
+      <div class="field">
+        <label for="pname">Атың, тегің</label>
+        <input type="text" id="pname" placeholder="Мысалы: Айбек Сәрсенов" maxlength="28" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="pclass">Сыныбың</label>
+        <select id="pclass">
+          <option>7 сынып</option><option>8 сынып</option><option selected>9 сынып</option>
+          <option>10 сынып</option><option>11 сынып</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="goBtn">Баспалдаққа шығу</button>
+      <span class="qsub" id="teacherNote" hidden>Мұғалім режимі: құрылғыдағы шектеу алынды.</span>
+    </div>
+  </section>
+
+  <!-- ҚАТЫСЫП ҚОЙҒАН -->
+  <section id="locked" class="card" hidden>
+    <div style="font-size:44px;line-height:1">🔒</div>
+    <h2 style="font-size:26px;font-weight:800;margin-top:8px" id="lockTitle">Сіз бұл квестке қатысып қойдыңыз</h2>
+    <p class="lead" id="lockText"></p>
+    <div class="stats" id="lockStats"></div>
+    <p class="qsub" style="margin-top:14px">Нәтижеңді мұғалімге көрсет. Квест бір құрылғыда бір рет қана ойналады.</p>
+  </section>
+
+  <!-- СҰРАҚ -->
+  <section id="quiz" class="card" hidden>
+    <div class="qhead">
+      <span class="chip lvl" id="qLvl">1-саты</span>
+      <span class="chip" id="qSubj">Биология</span>
+      <span class="chip prize" id="qPrize">+20 ұпай</span>
+    </div>
+    <h2 class="qtext" id="qText"></h2>
+    <p class="qsub" id="qSub" hidden></p>
+    <div id="qBody"></div>
+    <div class="helpers">
+      <button class="help" id="h5050">50 : 50</button>
+      <button class="help" id="hHint">💡 Кеңес</button>
+    </div>
+    <div class="hintbox" id="hintBox"></div>
+    <div class="feedback" id="fb"></div>
+    <div class="btn-row">
+      <button class="btn" id="checkBtn" hidden>Жауапты бекіту</button>
+      <button class="btn flame" id="nextBtn" hidden>Келесі саты</button>
+    </div>
+  </section>
+
+  <!-- ҚОРЫТЫНДЫ -->
+  <section id="over" hidden>
+    <div class="card result" id="resCard">
+      <div class="crown" id="resIcon">🏆</div>
+      <p class="who" id="resWho"></p>
+      <div class="rank" id="resRank"></div>
+      <div class="bigscore tnum" id="resScore"></div>
+      <p style="color:var(--muted);margin:6px 0 0" class="tnum" id="resMeta"></p>
+    </div>
+    <div class="card">
+      <div class="stats" id="resStats"></div>
+      <div class="btn-row">
+        <button class="btn" id="sendBtn">Нәтижені тіркеу 📨</button>
+        <button class="btn ghost" id="copyBtn">Нәтижені көшіру</button>
+      </div>
+      <p class="qsub" style="margin-top:10px"><b>«Нәтижені тіркеу»</b> батырмасын бас — аты-жөнің мен ұпайың
+        толтырылған парақ ашылады, саған тек «Жіберу» дегенді басу қалады. Егер парақ ашылмаса, сілтеме
+        көшіріліп қалады: оны браузерге қой немесе плакаттағы кіші QR кодты сканерле.
+        Квестке қайта кіру мүмкін емес.</p>
+    </div>
+    <div class="card">
+      <p class="eyebrow">Сұрақтарға шолу</p>
+      <div class="review" id="resReview"></div>
+    </div>
+  </section>
+
+  <footer>Жаратылыстану апталығы · 7–11 сыныптарға ортақ квест</footer>
+</div>
+
+<script>
+const STATIONS = [
+ {icon:"🧬", name:"Тірі зертхана", sub:"Биология", intro:"Жасушадан бастап адам ағзасына дейін — тірі табиғаттың кілттерін тап.", qs:[
+  {t:"mc", q:"Адам жүрегі неше қуыстан (камерадан) тұрады?", a:["2","3","4","5"], c:2,
+   hint:"Екі жүрекше мен екі қарыншаны қос.", why:"Жүрек 4 қуыстан тұрады: 2 жүрекше және 2 қарынша."},
+  {t:"mc", q:"Жасушаның «энергия станциясы» деп қай органоидты атайды?", a:["Рибосома","Митохондрия","Ядро","Вакуоль"], c:1,
+   hint:"Бұл жерде АТФ түзіледі.", why:"Митохондрияда тыныс алу реакциялары жүріп, АТФ энергиясы түзіледі."},
+  {t:"tf", q:"Өсімдіктер фотосинтез кезінде көмірқышқыл газын сіңіріп, оттегін бөліп шығарады.", c:true,
+   hint:"Жапырақ — табиғи «оттегі зауыты».", why:"Иә: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂ (жарық пен хлорофилл қатысуымен)."},
+  {t:"in", q:"Тұқым қуалау ақпараты жазылатын, қос спираль пішінді молекула қалай аталады?", ans:["днқ","dnk","dna","дезоксирибонуклеин қышқылы","днк"],
+   hint:"Үш әріп. Уотсон мен Крик оның құрылысын ашқан.", why:"ДНҚ — дезоксирибонуклеин қышқылы, тұқым қуалау ақпаратының сақтаушысы."},
+  {t:"match", q:"Мүшені қызметімен сәйкестендір", sub:"Сол жақтан бір мүшені, сосын оң жақтан сәйкес қызметін бас.",
+   pairs:[["Өкпе","Газ алмасу"],["Бүйрек","Қанды сүзу"],["Бауыр","Улы заттарды залалсыздандыру"],["Асқазан","Ас қорытуды бастау"]],
+   hint:"Бүйрек — ағзаның «сүзгісі», бауыр — «зертханасы».", why:"Өкпе — газ алмасу, бүйрек — қанды сүзу, бауыр — залалсыздандыру, асқазан — ас қорыту."},
+  {t:"mc", star:true, q:"Адам денесіндегі ең ұзын сүйек қайсы?", a:["Жауырын","Ортан жілік (сан сүйегі)","Кәрі жілік","Омыртқа"], c:1,
+   hint:"Ол жамбас пен тізе аралығында.", why:"Ортан жілік (femur) — ең ұзын әрі ең берік сүйек, бойдың шамамен ¼ бөлігі."},
+  {t:"mc", q:"Өсімдік жасушасында бар, бірақ жануар жасушасында жоқ органоид қайсы?", a:["Митохондрия","Хлоропласт","Ядро","Рибосома"], c:1,
+   hint:"Ол жасыл түсті, фотосинтез жүретін жер.", why:"Хлоропласт — тек өсімдік жасушасында, құрамындағы хлорофилл фотосинтезді жүргізеді."},
+  {t:"tf", q:"Қандағы эритроциттердің басты қызметі — оттегін тасымалдау.", c:true,
+   hint:"Гемоглобин деген ақуызды есіңе ал.", why:"Иә: эритроциттегі гемоглобин оттегін байланыстырып, ұлпаларға жеткізеді."},
+  {t:"in", q:"Ағзадағы ең ірі ішкі мүше, «табиғи зертхана» — уларды залалсыздандырып, өт сөлін бөледі. Ол қай мүше?", ans:["бауыр","бауыры","печень","liver"],
+   hint:"Ол оң жақ қабырға астында орналасқан.", why:"Бауыр — ең ірі ішкі мүше (1,5 кг-ға дейін), улы заттарды залалсыздандырып, өт түзеді."},
+  {t:"order", q:"Тірі ағзаның ұйымдасу деңгейлерін кішіден үлкенге қарай қой", sub:"Ең кішісінен баста.",
+   items:["Жасуша","Ұлпа","Мүше","Мүшелер жүйесі","Ағза"],
+   hint:"Бірнеше бірдей жасуша жиналып не түзеді?", why:"Жасуша → ұлпа → мүше → мүшелер жүйесі → тұтас ағза."},
+  {t:"mc", star:true, q:"Адамның дене жасушасында неше хромосома болады?", a:["23","44","46","48"], c:2,
+   hint:"23 жұп.", why:"Адам жасушасында 46 хромосома (23 жұп), оның бір жұбы — жыныстық хромосомалар."}
+ ]},
+ {icon:"⚗️", name:"Реакция", sub:"Химия", intro:"Формулалар, элементтер және заттардың мінезі. Колбаларды араластыратын кез!", qs:[
+  {t:"mc", q:"Ас тұзының химиялық формуласы қандай?", a:["KCl","NaCl","CaCO₃","NaOH"], c:1,
+   hint:"Натрий + хлор.", why:"Ас тұзы — натрий хлориді, NaCl."},
+  {t:"tf", q:"Алтын элементінің химиялық таңбасы — Ag.", c:false,
+   hint:"Ag — басқа қымбат металл.", why:"Алтын — Au (aurum). Ag — күміс (argentum)."},
+  {t:"in", q:"Ауа құрамында ең көп кездесетін газ — ол қандай газ?", ans:["азот","n2","n₂","nitrogen","азот газы"],
+   hint:"Ауаның 78%-ы осы газ. Оттегі емес!", why:"Ауаның ~78%-ы азот (N₂), ~21%-ы оттегі."},
+  {t:"match", q:"Таңбаны элемент атауымен сәйкестендір", pairs:[["Fe","Темір"],["O","Оттегі"],["C","Көміртек"],["Na","Натрий"]],
+   hint:"Fe — ferrum, Na — natrium.", why:"Fe — темір, O — оттегі, C — көміртек, Na — натрий."},
+  {t:"order", q:"Қышқылдықтан сілтілікке қарай ретімен орналастыр", sub:"Ең қышқылынан бастап бас (pH кішіден үлкенге).",
+   items:["Лимон шырыны","Сүт","Таза су","Ас содасының ерітіндісі","Сабын ерітіндісі"],
+   hint:"Таза судың pH-ы 7 — дәл ортасы.", why:"Лимон (pH≈2) → сүт (≈6,5) → су (7) → сода (≈9) → сабын (≈10)."},
+  {t:"mc", star:true, q:"Менделеев кестесіндегі ең жеңіл әрі ең бірінші элемент қайсы?", a:["Гелий","Сутегі","Литий","Көміртек"], c:1,
+   hint:"Оның ядросында бар болғаны 1 протон.", why:"Сутегі (H) — реттік нөмірі 1, атомдық массасы ең кіші элемент."},
+  {t:"mc", q:"Қалыпты атмосфералық қысымда су неше градуста қайнайды?", a:["50 °C","90 °C","100 °C","120 °C"], c:2,
+   hint:"Мұздың еруі 0 °C, ал қайнауы — дөңгелек сан.", why:"Қалыпты қысымда (760 мм сын. бағ.) су 100 °C-та қайнайды. Таудa қысым төмен болғандықтан, су ертерек қайнайды."},
+  {t:"tf", q:"Барлық металдар бөлме температурасында қатты күйде болады.", c:false,
+   hint:"Градусниктің ішіндегі күміс түсті сұйықты еске түсір.", why:"Жоқ: сынап (Hg) — бөлме температурасында сұйық металл."},
+  {t:"in", q:"Біз тыныс шығарғанда бөлінетін, өсімдікке фотосинтез үшін қажет газ қалай аталады?", ans:["көмірқышқыл газы","комиркышкыл газы","көмір қышқыл газы","co2","со2","co₂","углекислый газ","көмірқышқыл"],
+   hint:"Формуласы CO₂.", why:"Көмірқышқыл газы (CO₂) — тыныс шығару өнімі әрі фотосинтездің шикізаты."},
+  {t:"match", q:"Формуланы зат атауымен сәйкестендір", pairs:[["H₂SO₄","Күкірт қышқылы"],["CO₂","Көмірқышқыл газы"],["CaCO₃","Әк тас (бор)"],["NH₃","Аммиак"]],
+   hint:"NH₃ — өткір иісті газ, оны нашатырь спирті деп те атайды.", why:"H₂SO₄ — күкірт қышқылы, CO₂ — көмірқышқыл газы, CaCO₃ — әк тас, NH₃ — аммиак."},
+  {t:"mc", star:true, q:"Төмендегілердің қайсысы химиялық реакция жүргенінің белгісі ЕМЕС?", a:["Газ бөлінуі","Тұнба түзілуі","Түстің өзгеруі","Затты ұсақтап бөлшектеу"], c:3,
+   hint:"Қайсысында жаңа зат түзілмейді?", why:"Затты ұсақтау — физикалық құбылыс, жаңа зат түзілмейді. Қалған үшеуі — химиялық реакция белгілері."}
+ ]},
+ {icon:"⚡", name:"Күш пен Қозғалыс", sub:"Физика", intro:"Жылдамдық, күш, энергия. Мұнда формулалар да, логика да керек.", qs:[
+  {t:"mc", q:"Жарықтың вакуумдегі жылдамдығы шамамен қанша?", a:["3 000 км/с","30 000 км/с","300 000 км/с","3 000 000 км/с"], c:2,
+   hint:"Ол 1 секундта Жерді 7,5 рет айналып шығады.", why:"c ≈ 300 000 км/с (дәлірек 299 792 км/с)."},
+  {t:"tf", q:"Дыбыс ғарыш кеңістігінде (вакуумде) де тарала алады.", c:false,
+   hint:"Дыбысқа тербелетін орта қажет.", why:"Жоқ: дыбыс — серпімді ортадағы толқын, вакуумде тарамайды."},
+  {t:"match", q:"Физикалық шаманы өлшем бірлігімен сәйкестендір", pairs:[["Күш","Ньютон"],["Кернеу","Вольт"],["Қуат","Ватт"],["Жиілік","Герц"]],
+   hint:"Әр бірлік — бір ғалымның есімі.", why:"Күш — Н, кернеу — В, қуат — Вт, жиілік — Гц."},
+  {t:"in", q:"Барлық денелерді Жерге қарай тартатын күш қалай аталады?", ans:["ауырлық күші","ауырлық куши","гравитация","тартылыс күші","тартылыс","ауырлық"],
+   hint:"Ньютонның алмасы осы күштің кесірінен құлаған.", why:"Ауырлық күші (гравитация): F = m·g, мұндағы g ≈ 9,8 м/с²."},
+  {t:"mc", star:true, q:"Массасы 2 кг дене 3 м/с² үдеумен қозғалса, оған әсер ететін күш неге тең?", a:["1,5 Н","5 Н","6 Н","9 Н"], c:2,
+   hint:"Ньютонның екінші заңы: F = m·a.", why:"F = m·a = 2 кг · 3 м/с² = 6 Н."},
+  {t:"mc", q:"Термос ыстық шайды ұзақ сақтайды, өйткені ол:", a:["Жылуды сіңіреді","Жылу алмасуды азайтады","Жылуды көбейтеді","Ауаны қыздырады"], c:1,
+   hint:"Қос қабырға арасындағы вакуумды есіңе ал.", why:"Термостың қос қабырғасы мен айнадай беті жылу өткізгіштік, конвекция және сәулеленуді азайтады."},
+  {t:"mc", q:"Қай құбылыс жарықтың шағылуына мысал бола алады?", a:["Айнадағы бейне","Судағы қасықтың сынық көрінуі","Кемпірқосақ","Көлеңке"], c:0,
+   hint:"Шағылу — сәуленің бетке тиіп қайта оралуы.", why:"Айнадағы бейне — шағылу. Қасықтың сынық көрінуі мен кемпірқосақ — сыну, көлеңке — түзу сызықты таралу."},
+  {t:"tf", q:"Ауа кедергісі болмаса, массалары әртүрлі екі дене жерге бірдей уақытта құлайды.", c:true,
+   hint:"Айда балға мен қауырсынды тастаған тәжірибені еске түсір.", why:"Иә: еркін түсу үдеуі g денеге массасына тәуелсіз бірдей әсер етеді."},
+  {t:"in", q:"Электр тізбегіндегі ток күшін өлшейтін аспап қалай аталады?", ans:["амперметр","ampermetr","ammeter"],
+   hint:"Өлшем бірлігі — ампер.", why:"Амперметр ток күшін өлшейді, тізбекке тізбектей жалғанады. Кернеуді вольтметр өлшейді."},
+  {t:"order", q:"Жылдамдығы бойынша кішіден үлкенге қарай орналастыр", sub:"Ең баяуынан баста.",
+   items:["Жаяу адам","Велосипедші","Жеңіл автомобиль","Жолаушылар ұшағы","Ауадағы дыбыс"],
+   hint:"Ауадағы дыбыс — шамамен 340 м/с, яғни 1224 км/сағ.", why:"Жаяу (5 км/сағ) → велосипед (20) → автомобиль (90) → ұшақ (900) → дыбыс (1224 км/сағ)."},
+  {t:"mc", star:true, q:"Кернеуі 220 В тізбекте 2 А ток жүрсе, тұтынылатын қуат неге тең?", a:["110 Вт","222 Вт","440 Вт","880 Вт"], c:2,
+   hint:"P = U · I.", why:"P = U·I = 220 В · 2 А = 440 Вт."}
+ ]},
+ {icon:"🌍", name:"Жер мен Ғарыш", sub:"География · Астрономия", intro:"Планетамыздан Күн жүйесіне дейін саяхат. Картаны да, аспанды да білу керек.", qs:[
+  {t:"mc", q:"Күн жүйесіндегі ең үлкен планета қайсы?", a:["Сатурн","Юпитер","Нептун","Жер"], c:1,
+   hint:"Оның «Үлкен қызыл дағы» бар.", why:"Юпитер — ең үлкен планета, Жерден 1300 еседен астам көлемді."},
+  {t:"mc", q:"Қазақстандағы ең биік шың қалай аталады?", a:["Бесбақан","Хан Тәңірі","Белуха","Қазығұрт"], c:1,
+   hint:"Биіктігі 7000 метрден асады, күн батарда қызғылт тартады.", why:"Хан Тәңірі — 7010 м, Тянь-Шань жотасында."},
+  {t:"tf", q:"Байқоңыр — адамзат тарихындағы алғашқы ғарыш айлағы.", c:true,
+   hint:"1957 жылы алғашқы жасанды серік осы жерден ұшқан.", why:"Иә, 1955 жылы салынған Байқоңырдан алғашқы серік (1957) және Гагарин (1961) ұшқан."},
+  {t:"order", q:"Планеталарды Күннен қашықтығы бойынша ретімен қой", sub:"Күнге ең жақынынан баста.",
+   items:["Меркурий","Венера","Жер","Марс","Юпитер"],
+   hint:"Венера — Жердің «егізі», ол бізден Күнге жақынырақ.", why:"Меркурий → Венера → Жер → Марс → Юпитер."},
+  {t:"in", q:"Жердің жалғыз табиғи серігі қалай аталады?", ans:["ай","moon","луна"],
+   hint:"Түнде аспанда жарқырайды, екі әріп.", why:"Ай — Жердің жалғыз табиғи серігі, орташа қашықтығы 384 400 км."},
+  {t:"mc", star:true, q:"Литосфералық тақталардың жылжуы ең алдымен неге себеп болады?", a:["Цунами мен жер сілкінісі","Солтүстік шұғыласы","Күн тұтылуы","Муссон желі"], c:0,
+   hint:"Тақталар шекарасында не болатынын ойла.", why:"Тақталардың жылжуы жер сілкінісі, жанартау атқылауы және цунами тудырады."},
+  {t:"mc", q:"Әлемдегі ең терең көл қайсы?", a:["Каспий теңізі","Байкал","Балқаш","Виктория"], c:1,
+   hint:"Тереңдігі 1642 метрден асады, Ресейде орналасқан.", why:"Байкал — тереңдігі 1642 м, жер шарындағы тұщы судың ~20%-ы осында."},
+  {t:"mc", q:"Қазақстандағы ең ұзын өзен қайсы?", a:["Жайық (Орал)","Ертіс","Сырдария","Іле"], c:1,
+   hint:"Ол Қытайдан басталып, Ресейде Обь өзеніне құяды.", why:"Ертіс — ел аумағындағы ең ұзын өзен (Қазақстан бойынша ~1700 км, жалпы ұзындығы 4248 км)."},
+  {t:"tf", q:"Қазақстан — әлемдегі теңізге тікелей шыға алмайтын ең үлкен мемлекет.", c:true,
+   hint:"Каспий — тұйық су айдыны, мұхитқа жол ашпайды.", why:"Иә: аумағы 2 724 900 км² болған Қазақстан — ішкі (теңізге шықпайтын) ең ірі мемлекет."},
+  {t:"in", q:"Жер бетінің шамамен 71%-ын не алып жатыр?", ans:["су","мұхит","мухит","дүниежүзілік мұхит","су айдындары","вода","океан"],
+   hint:"Сондықтан Жерді «Көк планета» деп атайды.", why:"Жер бетінің ~71%-ы — су (дүниежүзілік мұхит), 29%-ы ғана құрлық."},
+  {t:"match", q:"Табиғат құбылысын оның себебімен сәйкестендір",
+   pairs:[["Жел","Ауа қысымының айырмасы"],["Цунами","Су астындағы жер сілкінісі"],["Жаңбыр","Су буының конденсациясы"],["Жанартау атқылауы","Магманың жер бетіне шығуы"]],
+   hint:"Жел әрқашан қысымы жоғары аймақтан төмен аймаққа соғады.", why:"Жел — қысым айырмасынан, цунами — су асты жер сілкінісінен, жаңбыр — будың конденсациясынан, жанартау — магманың көтерілуінен."},
+  {t:"mc", star:true, q:"Жер Күнді бір рет толық айналып шығуға қанша уақыт жұмсайды?", a:["24 сағат","30 күн","365 күн 6 сағат","12 жыл"], c:2,
+   hint:"Артық 6 сағаттан 4 жылда бір «кібісе жыл» құралады.", why:"365 күн 6 сағат. Сол 6 сағаттан әр 4 жылда 29 ақпан қосылады."}
+ ]},
+ {icon:"🧩", name:"Ғалымдар мен Жұмбақтар", sub:"Аралас · Логика", intro:"Есім, жұмбақ және тапқырлық. Мұнда білім емес, зеректік шешеді!", qs:[
+  {t:"match", q:"Ғалымды оның ашқан жаңалығымен сәйкестендір",
+   pairs:[["Исаак Ньютон","Бүкіләлемдік тартылыс заңы"],["Дмитрий Менделеев","Периодтық заң"],["Чарльз Дарвин","Эволюция теориясы"],["Альберт Эйнштейн","Салыстырмалық теориясы"]],
+   hint:"Менделеев түсінде кестені көрген деседі.", why:"Ньютон — тартылыс, Менделеев — периодтық заң, Дарвин — эволюция, Эйнштейн — салыстырмалық теориясы."},
+  {t:"in", q:"Жұмбақ: ☀️ + 🌧️ = ? Жаңбырдан кейін аспанда пайда болатын жеті түсті көпір.", ans:["кемпірқосақ","кемпиркосак","кемпір қосақ","радуга","rainbow"],
+   hint:"Жарықтың тамшыда сынуынан пайда болады.", why:"Кемпірқосақ — күн сәулесінің су тамшысында сынып, жеті түске жіктелуі."},
+  {t:"mc", q:"Термометр таңертең −5 °С көрсетті. Күндіз температура 8 градусқа көтерілді. Қанша болды?", a:["−13 °С","+3 °С","+8 °С","−3 °С"], c:1,
+   hint:"−5 + 8 = ?", why:"−5 + 8 = +3 °С."},
+  {t:"tf", q:"Найзағай жарқылы мен күн күркірі бір мезетте пайда болады, бірақ біз жарқылды бұрын көреміз.", c:true,
+   hint:"Жарық пен дыбыстың жылдамдығын салыстыр.", why:"Иә: жарық 300 000 км/с, дыбыс ~0,34 км/с. Сондықтан жарқыл бұрын жетеді."},
+  {t:"in", q:"Жұмбақ: «Мен түссізмін, иіссізмін, көрінбеймін. Бірақ мен болмасам, тірі ағза бірнеше минут та шыдамайды». Мен кіммін?", ans:["оттегі","оттек","оттеги","o2","о2","o₂","кислород","oxygen"],
+   hint:"Ауаның 21%-ын құрайды, жануға да қажет.", why:"Оттегі (O₂) — тыныс алу мен жануға қажетті газ."},
+  {t:"mc", star:true, q:"Төмендегілердің қайсысы жаңартылатын энергия көзі ЕМЕС?", a:["Жел","Күн","Тас көмір","Су ағыны"], c:2,
+   hint:"Миллиондаған жылда түзіліп, бір рет жағылады.", why:"Тас көмір — қазба отын, қоры шектеулі әрі жаңармайды."},
+  {t:"mc", q:"Зертханада тәжірибе жасамас бұрын ең алдымен не істеу керек?", a:["Затты дәмін татып көру","Мұғалімнің нұсқауын тыңдап, қорғаныш құралын кию","Бірден араластыра бастау","Телефонға түсіру"], c:1,
+   hint:"Қауіпсіздік ережесі бәрінен бұрын тұрады.", why:"Алдымен нұсқаулықты тыңдап, көзілдірік пен халат кию керек. Зертханада ешнәрсенің дәмін татуға болмайды."},
+  {t:"in", q:"Жұмбақ: «Қыста жауады, даланы ақ көрпемен жабады, көктемде жоқ болады». Бұл не?", ans:["қар","кар","снег","snow"],
+   hint:"Ол — судың қатты күйдегі атмосфералық түрі.", why:"Қар — ауадағы су буының кристалданып, жерге түсуі."},
+  {t:"mc", q:"Логика: барлық металдар электр тогын өткізеді. Мыс — металл. Демек, мыс:", a:["Ток өткізбейді","Ток өткізеді","Тек ысыса өткізеді","Жауабын білу мүмкін емес"], c:1,
+   hint:"Жалпы ережені жеке жағдайға қолдан.", why:"Силлогизм бойынша: барлық металл ток өткізсе, металл болған мыс та ток өткізеді."},
+  {t:"tf", q:"Ғылыми болжам (гипотеза) тәжірибемен тексерілмесе де, ғылыми факт бола алады.", c:false,
+   hint:"Ғылыми әдістің негізгі қадамын еске түсір.", why:"Жоқ: гипотеза бақылау мен тәжірибе арқылы тексеріліп, қайталанғанда ғана ғылыми фактіге айналады."},
+  {t:"mc", star:true, q:"Бір бактерия әрбір 20 минут сайын екіге бөлінеді. 1 сағаттан кейін неше бактерия болады?", a:["3","6","8","12"], c:2,
+   hint:"1 сағатта 3 рет бөліну: 1→2→4→…", why:"Әр 20 минутта саны екі есе: 1 → 2 → 4 → 8. Яғни 1 сағатта 8 бактерия."}
+ ]},
+ {icon:"🌱", name:"Жасыл Планета", sub:"Экология", intro:"Соңғы станса — табиғатты қорғау. Мұнда әр жауабың планетаның болашағына қатысты.", qs:[
+  {t:"mc", q:"«Жер шарының өкпесі» деп қай орманды атайды?", a:["Сібір тайгасы","Амазонка ормандары","Конго саванналары","Қарағай орманы"], c:1,
+   hint:"Ол Оңтүстік Америкадағы ең ірі тропиктік орман.", why:"Амазонка ормандары — планетаның ең ірі тропиктік орманы, оттегі өндіруде маңызды рөл атқарады."},
+  {t:"tf", q:"Тастап кеткен пластик қалта табиғатта бірнеше айда толық ыдырап кетеді.", c:false,
+   hint:"Пластик — табиғатта кездеспейтін жасанды материал.", why:"Жоқ: пластик қалта 100–200 жыл, пластик бөтелке 450 жылға дейін ыдырайды."},
+  {t:"mc", q:"Озон қабаты Жердегі тіршілікті неден қорғайды?", a:["Метеориттерден","Күннің ультракүлгін сәулесінен","Жел эрозиясынан","Жер сілкінісінен"], c:1,
+   hint:"Бұл сәуле теріні күйдіріп, ДНҚ-ны зақымдайды.", why:"Озон қабаты (O₃) Күннің қатерлі ультракүлгін сәулесін сіңіріп, тірі ағзаларды қорғайды."},
+  {t:"in", q:"Қазақстандағы тартылып, бүкіл әлемге белгілі экологиялық апат аймағына айналған теңіз қалай аталады?", ans:["арал","арал теңізі","арал тенизи","aral","аралтеңізі","аральское море"],
+   hint:"Оның құрғаған түбінде кемелер қалды.", why:"Арал теңізі — суару үшін өзен суын шамадан тыс алу салдарынан тартылған, XX ғасырдағы ең ірі экологиялық апаттың бірі."},
+  {t:"match", q:"Қалдықты табиғатта ыдырау мерзімімен сәйкестендір",
+   pairs:[["Қағаз","2–5 ай"],["Темір банка","10 жылдай"],["Пластик бөтелке","450 жыл"],["Шыны бөтелке","1000 жылдан астам"]],
+   hint:"Ең ұзақ «өмір сүретіні» — мөлдір әрі сынғыш материал.", why:"Қағаз 2–5 ай, темір банка ~10 жыл, пластик 450 жыл, шыны 1000 жылдан астам ыдырайды."},
+  {t:"order", q:"Қоректік тізбекті дұрыс ретімен құрастыр", sub:"Қорегі болатыннан бастап қой.",
+   items:["Шөп","Шегіртке","Бақа","Жылан","Бүркіт"],
+   hint:"Тізбек әрқашан өсімдіктен басталады.", why:"Шөп → шегіртке → бақа → жылан → бүркіт. Әр саты алдыңғысымен қоректенеді."},
+  {t:"mc", q:"Жылыжай эффектісін күшейтетін басты газ қайсы?", a:["Оттегі","Азот","Көмірқышқыл газы","Гелий"], c:2,
+   hint:"Ол отын жаққанда ауаға шығады.", why:"CO₂ — жылыжай эффектісінің басты газы, оның артуы климаттың жылынуына әкеледі."},
+  {t:"tf", q:"Қызыл кітапқа саны азайып, жойылып бара жатқан өсімдіктер мен жануарлар тіркеледі.", c:true,
+   hint:"Қазақстанда қар барысы да сонда тіркелген.", why:"Иә: Қызыл кітап — сирек әрі жойылу қаупі бар түрлердің тізімі, олар заңмен қорғалады."},
+  {t:"in", q:"Ормандарды кесу мен шамадан тыс жайылым салдарынан топырақтың құнарлы қабатының су мен желмен бұзылуы қалай аталады?", ans:["эрозия","эрозия процесі","топырақ эрозиясы","эррозия"],
+   hint:"Сөз латынның «мүжілу» дегенінен шыққан.", why:"Эрозия — топырақтың құнарлы қабатының су және жел әсерінен бұзылып, шайылуы."},
+  {t:"mc", star:true, q:"Қоректік тізбектің бір сатысынан келесі сатыға энергияның шамамен қанша бөлігі беріледі?", a:["1%","10%","50%","90%"], c:1,
+   hint:"Экологиялық пирамиданың «ондық ереже» деп аталатын заңдылығы.", why:"Ондық ереже: энергияның тек ~10%-ы келесі трофикалық деңгейге өтеді, қалғаны тіршілікке жұмсалады."},
+  {t:"mc", star:true, q:"1 тонна макулатураны (ескі қағазды) қайта өңдеу шамамен неше ағашты кесуден сақтайды?", a:["1 ағаш","17 ағаш","100 ағаш","500 ағаш"], c:1,
+   hint:"Жиырмаға жетер-жетпес сан.", why:"1 тонна макулатура ~17 ағашты, сондай-ақ көп мөлшерде су мен энергияны үнемдейді."}
+ ]}
+];
+
+/* Нәтиже жиналатын Google форма */
+const FORM="https://docs.google.com/forms/d/e/1FAIpQLSdZmyH3IebSZFxXh6YKwx5a-glJaSX_bCWzmOH-8rShjZn7BA/viewform?usp=pp_url";
+const FQ={name:"entry.104472437",cls:"entry.641579091",score:"entry.814055148",lvl:"entry.263733812",rank:"entry.877073141"};
+
+const LEVELS=[20,20,20,20,20,40,40,40,40,40,70,70,70,70,70];
+const SAFE=[4,9];            // 5-ші және 10-шы сатылар (0-ден басталатын индекс)
+const SECONDS=90;
+const KEY="gk_bas_v1";
+const $=id=>document.getElementById(id);
+const S={name:"",cls:"",lvl:0,score:0,safe:0,ladder:[],log:[],state:null,t0:0,left:0,tick:null,used:{h:false,f:false}};
+
+function norm(s){return (s||"").toLowerCase().trim().replace(/[.,!?;:"'`’]/g,"").replace(/\s+/g," ")}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function show(id){["start","locked","quiz","over"].forEach(x=>$(x).hidden=(x!==id)); window.scrollTo({top:0,behavior:"smooth"})}
+function tier(q){return q.star?3:((q.t==="match"||q.t==="order")?2:1)}
+
+function buildLadder(){
+  const all=[]; STATIONS.forEach((st,si)=>st.qs.forEach(q=>all.push({q,si,sub:st.sub,icon:st.icon})));
+  const t={1:[],2:[],3:[]}; all.forEach(o=>t[tier(o.q)].push(o));
+  const pick=(arr,n)=>{
+    const sh=shuffle(arr), out=[], used={};
+    for(const o of sh){ if(out.length>=n)break; if(!used[o.si]){out.push(o); used[o.si]=1} }
+    for(const o of sh){ if(out.length>=n)break; if(out.indexOf(o)<0)out.push(o) }
+    return shuffle(out);
+  };
+  return [...pick(t[1],5),...pick(t[2],5),...pick(t[3],5)];
+}
+
+/* ---- бір құрылғы — бір ойын ---- */
+function readLock(){try{const r=localStorage.getItem(KEY); return r?JSON.parse(r):null}catch(e){return null}}
+function writeLock(o){try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
+function clearLock(){try{localStorage.removeItem(KEY)}catch(e){}}
+
+$("subjList").innerHTML=STATIONS.map(s=>`<span class="stn">${s.icon} ${s.sub}</span>`).join("");
+
+(function boot(){
+  if(location.hash==="#mugalim"){ clearLock(); $("teacherNote").hidden=false; show("start"); return }
+  const lk=readLock();
+  if(lk&&lk.status==="playing"){
+    $("lockTitle").textContent="Ойын басталып қойған";
+    $("lockText").textContent="Бұл құрылғыда квест бір рет басталды. Беттің жаңартылуы немесе қайта кіру ойынды жалғастырмайды — нәтижең сол сәтте тіркелді.";
+    $("lockStats").innerHTML="";
+    show("locked"); return;
+  }
+  if(lk&&lk.status==="done"){
+    $("lockTitle").textContent="Сіз бұл квестке қатысып қойдыңыз";
+    $("lockText").textContent=lk.name+" ("+lk.cls+") нәтижесі тіркелген. Квест бір рет қана ойналады.";
+    $("lockStats").innerHTML=`<div class="stat"><b class="tnum">${lk.score}</b><small>ұпай</small></div>
+      <div class="stat"><b class="tnum">${lk.lvl}/15</b><small>саты</small></div>
+      <div class="stat"><b>${lk.rank}</b><small>дәреже</small></div>
+      <div class="stat"><b class="tnum">${lk.date}</b><small>күні</small></div>`;
+    show("locked"); return;
+  }
+  show("start");
+})();
+
+window.addEventListener("hashchange",()=>{ if(location.hash==="#mugalim"){ clearLock(); location.reload() } });
+
+$("pname").addEventListener("keydown",e=>{if(e.key==="Enter")$("goBtn").click()});
+$("goBtn").onclick=()=>{
+  S.name=($("pname").value||"").trim()||"Жас зерттеуші"; S.cls=$("pclass").value;
+  S.ladder=buildLadder(); S.lvl=0; S.score=0; S.safe=0; S.log=[]; S.used={h:false,f:false}; S.fail=false;
+  writeLock({status:"playing",name:S.name,cls:S.cls,date:new Date().toLocaleDateString("kk-KZ")});
+  S.t0=Date.now(); $("bar").hidden=false; render();
+};
+
+function dots(){
+  $("barDots").innerHTML=S.ladder.map((_,i)=>{
+    const cls=i<S.lvl?"pass":(i===S.lvl?"now":(SAFE.indexOf(i)>-1?"safe":""));
+    return `<i class="${cls}"></i>`;
+  }).join("");
+}
+function bar(){
+  $("barLvl").textContent=(S.lvl+1)+"-саты / 15";
+  $("barScore").textContent=S.score+" ұпай";
+  dots();
+}
+function startTimer(){
+  clearInterval(S.tick); S.left=SECONDS; paintTime();
+  S.tick=setInterval(()=>{ S.left--; paintTime(); if(S.left<=0){ clearInterval(S.tick); timeUp() } },1000);
+}
+function paintTime(){ $("barTime").textContent=S.left+" с"; $("barTime").classList.toggle("warn",S.left<=15) }
+function stopTimer(){ clearInterval(S.tick) }
+
+function render(){
+  const o=S.ladder[S.lvl], q=o.q;
+  bar(); show("quiz");
+  $("qLvl").textContent=(S.lvl+1)+"-саты";
+  $("qSubj").textContent=o.icon+" "+o.sub;
+  $("qPrize").textContent="+"+LEVELS[S.lvl]+" ұпай";
+  $("qText").textContent=q.q;
+  $("qSub").hidden=!q.sub; if(q.sub)$("qSub").textContent=q.sub;
+  $("hintBox").className="hintbox"; $("hintBox").textContent="";
+  $("fb").className="feedback"; $("fb").innerHTML="";
+  $("nextBtn").hidden=true; $("checkBtn").hidden=true; $("checkBtn").disabled=true;
+  $("hHint").disabled=S.used.h; $("h5050").disabled=S.used.f||q.t!=="mc";
+  S.state={answered:false};
+  const B=$("qBody"); B.innerHTML="";
+
+  if(q.t==="mc"){
+    const keys=["А","Ә","Б","В"];
+    const opts=shuffle(q.a.map((text,i)=>({text,ok:i===q.c})));
+    const wrap=document.createElement("div"); wrap.className="opts";
+    opts.forEach((o2,i)=>{
+      const b=document.createElement("button"); b.className="opt"; b.dataset.ok=o2.ok?"1":"";
+      b.innerHTML=`<span class="key">${keys[i]||i+1}</span><span>${o2.text}</span>`;
+      b.onclick=()=>{
+        if(S.state.answered)return;
+        [...wrap.children].forEach(c=>{c.disabled=true});
+        [...wrap.children].forEach((c,j)=>{if(opts[j].ok)c.classList.add("good")});
+        if(!o2.ok)b.classList.add("bad");
+        finish(o2.ok,q,opts.find(x=>x.ok).text);
+      };
+      wrap.appendChild(b);
+    });
+    B.appendChild(wrap);
+  }
+  if(q.t==="tf"){
+    const wrap=document.createElement("div"); wrap.className="tf";
+    [["Иә, дұрыс",true],["Жоқ, қате",false]].forEach(([label,val])=>{
+      const b=document.createElement("button"); b.className="opt"; b.textContent=label;
+      b.onclick=()=>{
+        if(S.state.answered)return;
+        [...wrap.children].forEach(c=>c.disabled=true);
+        [...wrap.children].forEach((c,j)=>{if((j===0)===q.c)c.classList.add("good")});
+        if(val!==q.c)b.classList.add("bad");
+        finish(val===q.c,q,q.c?"Иә, дұрыс":"Жоқ, қате");
+      };
+      wrap.appendChild(b);
+    });
+    B.appendChild(wrap);
+  }
+  if(q.t==="in"){
+    const row=document.createElement("div"); row.className="answerline";
+    const inp=document.createElement("input"); inp.type="text"; inp.id="inAns"; inp.placeholder="Жауабыңды жаз…"; inp.autocomplete="off";
+    row.appendChild(inp); B.appendChild(row);
+    $("checkBtn").hidden=false;
+    inp.oninput=()=>{$("checkBtn").disabled=norm(inp.value).length===0};
+    inp.onkeydown=e=>{if(e.key==="Enter"&&!$("checkBtn").disabled)$("checkBtn").click()};
+    $("checkBtn").onclick=()=>{ if(S.state.answered)return;
+      const ok=q.ans.some(a=>norm(a)===norm(inp.value)); inp.disabled=true; finish(ok,q,q.ans[0]) };
+    setTimeout(()=>inp.focus(),120);
+  }
+  if(q.t==="match"){
+    const left=q.pairs.map(p=>p[0]), right=shuffle(q.pairs.map(p=>p[1]));
+    const link={}; let sel=null;
+    const grid=document.createElement("div"); grid.className="match";
+    const lc=document.createElement("div"); lc.className="mcol";
+    const rc=document.createElement("div"); rc.className="mcol";
+    left.forEach((txt,i)=>{const b=document.createElement("button");b.className="mitem";b.textContent=txt;
+      b.onclick=()=>{if(S.state.answered)return; if(link[i]!==undefined)delete link[i]; sel=i; paint()}; lc.appendChild(b)});
+    right.forEach((txt,j)=>{const b=document.createElement("button");b.className="mitem";b.textContent=txt;
+      b.onclick=()=>{if(S.state.answered||sel===null)return;
+        Object.keys(link).forEach(k=>{if(link[k]===j)delete link[k]});
+        link[sel]=j; sel=null; paint()}; rc.appendChild(b)});
+    grid.appendChild(lc); grid.appendChild(rc); B.appendChild(grid);
+    function paint(){
+      [...lc.children].forEach((b,i)=>{b.className="mitem"+(sel===i?" sel":"")+(link[i]!==undefined?" linked":"");
+        if(b.querySelector(".num"))b.querySelector(".num").remove();
+        if(link[i]!==undefined){const n=document.createElement("span");n.className="num";n.textContent=i+1;b.appendChild(n)}});
+      [...rc.children].forEach((b,j)=>{const owner=Object.keys(link).find(k=>link[k]===j);
+        b.className="mitem"+(owner!==undefined?" linked":"");
+        if(b.querySelector(".num"))b.querySelector(".num").remove();
+        if(owner!==undefined){const n=document.createElement("span");n.className="num";n.textContent=(+owner)+1;b.appendChild(n)}});
+      $("checkBtn").disabled=Object.keys(link).length!==left.length;
+    }
+    paint(); $("checkBtn").hidden=false;
+    $("checkBtn").onclick=()=>{ if(S.state.answered)return;
+      let ok=true;
+      left.forEach((txt,i)=>{ const correct=q.pairs[i][1], chosen=right[link[i]], good=correct===chosen;
+        if(!good)ok=false; lc.children[i].classList.add(good?"good":"bad");
+        rc.children[right.indexOf(correct)].classList.add(good?"good":"bad") });
+      [...lc.children,...rc.children].forEach(b=>b.disabled=true);
+      finish(ok,q,q.pairs.map(p=>p[0]+" → "+p[1]).join("; ")) };
+  }
+  if(q.t==="order"){
+    const items=shuffle(q.items.map((text,i)=>({text,i}))); const picked=[];
+    const wrap=document.createElement("div"); wrap.className="order";
+    items.forEach((o2,k)=>{const b=document.createElement("button"); b.className="oitem";
+      b.innerHTML=`<span class="num">·</span><span>${o2.text}</span>`;
+      b.onclick=()=>{ if(S.state.answered)return; const at=picked.indexOf(k);
+        if(at>-1)picked.splice(at,1); else picked.push(k); paint() }; wrap.appendChild(b)});
+    B.appendChild(wrap);
+    function paint(){
+      [...wrap.children].forEach((b,k)=>{const p=picked.indexOf(k);
+        b.className="oitem"+(p>-1?" sel":""); b.querySelector(".num").textContent=p>-1?(p+1):"·"});
+      $("checkBtn").disabled=picked.length!==items.length;
+    }
+    paint(); $("checkBtn").hidden=false;
+    $("checkBtn").onclick=()=>{ if(S.state.answered)return;
+      let ok=true;
+      picked.forEach((k,pos)=>{const good=items[k].i===pos; if(!good)ok=false; wrap.children[k].classList.add(good?"good":"bad")});
+      [...wrap.children].forEach(b=>b.disabled=true);
+      finish(ok,q,q.items.join(" → ")) };
+  }
+  startTimer();
+}
+
+$("hHint").onclick=()=>{
+  if(S.used.h||S.state.answered)return;
+  S.used.h=true; $("hHint").disabled=true;
+  $("hintBox").textContent="💡 "+S.ladder[S.lvl].q.hint; $("hintBox").classList.add("show");
+};
+$("h5050").onclick=()=>{
+  const q=S.ladder[S.lvl].q;
+  if(S.used.f||S.state.answered||q.t!=="mc")return;
+  S.used.f=true; $("h5050").disabled=true;
+  const wrong=shuffle([...document.querySelectorAll("#qBody .opt")].filter(b=>!b.dataset.ok));
+  wrong.slice(0,2).forEach(b=>b.classList.add("gone"));
+};
+
+function timeUp(){
+  if(S.state&&S.state.answered)return;
+  const q=S.ladder[S.lvl].q;
+  const ans=q.t==="mc"?q.a[q.c]:(q.t==="tf"?(q.c?"Иә, дұрыс":"Жоқ, қате"):(q.t==="in"?q.ans[0]:
+    (q.t==="match"?q.pairs.map(p=>p[0]+" → "+p[1]).join("; "):q.items.join(" → "))));
+  [...document.querySelectorAll("#qBody button")].forEach(b=>b.disabled=true);
+  finish(false,q,ans,true);
+}
+
+function finish(ok,q,correctText,timeout){
+  S.state.answered=true; stopTimer();
+  $("hHint").disabled=true; $("h5050").disabled=true; $("checkBtn").hidden=true;
+  S.log.push({lvl:S.lvl+1,sub:S.ladder[S.lvl].sub,q:q.q,ok,why:q.why,ans:correctText});
+  const fb=$("fb");
+  if(ok){
+    S.score+=LEVELS[S.lvl];
+    if(SAFE.indexOf(S.lvl)>-1)S.safe=S.score;
+    fb.className="feedback show yes";
+    fb.innerHTML=`<b>Дұрыс! +${LEVELS[S.lvl]} ұпай${SAFE.indexOf(S.lvl)>-1?" · сенімді саты алынды 🛟":""}</b><span>${q.why}</span>`;
+    $("nextBtn").hidden=false; $("nextBtn").textContent=S.lvl===14?"Қорытындыны көру":"Келесі саты";
+    $("nextBtn").focus(); bar();
+  }else{
+    fb.className="feedback show no";
+    fb.innerHTML=`<b>${timeout?"Уақыт бітті!":"Қате жауап."} Дұрысы: ${correctText}</b><span>${q.why}</span>`;
+    $("nextBtn").hidden=false; $("nextBtn").textContent="Нәтижені көру";
+    S.score=S.safe; S.fail=true; bar();
+  }
+}
+
+$("nextBtn").onclick=()=>{
+  if(S.fail){ over(false); return }
+  if(S.lvl<14){ S.lvl++; render() } else over(true);
+};
+
+function over(win){
+  stopTimer(); $("bar").hidden=true;
+  const lvl=S.fail?S.lvl:15;
+  const rank = win?"Квест Жеңімпазы" : (S.score>=300?"Ғылым Шебері" : (S.score>=100?"Жас Зерттеуші":"Табанды Ізденуші"));
+  $("resCard").className="card result "+(win?"win":(S.score>=100?"":"lose"));
+  $("resIcon").textContent=win?"🏆":(S.score>=100?"🎖️":"🌱");
+  $("resWho").textContent=S.name+" · "+S.cls;
+  $("resRank").textContent=rank;
+  $("resScore").textContent=S.score+" ұпай";
+  const secs=Math.round((Date.now()-S.t0)/1000);
+  $("resMeta").textContent=lvl+"/15 саты · "+Math.floor(secs/60)+" мин "+(secs%60)+" с · "+new Date().toLocaleDateString("kk-KZ");
+  $("resStats").innerHTML=`<div class="stat"><b class="tnum">${lvl}/15</b><small>жеткен саты</small></div>
+    <div class="stat"><b class="tnum">${S.log.filter(x=>x.ok).length}</b><small>дұрыс жауап</small></div>
+    <div class="stat"><b class="tnum">${S.safe}</b><small>сенімді ұпай</small></div>
+    <div class="stat"><b>${(S.used.h?1:0)+(S.used.f?1:0)}/2</b><small>көмекші</small></div>`;
+  $("resReview").innerHTML=S.log.map(l=>`<div class="rev"><span class="mark ${l.ok?"y":"n"}">${l.ok?"✓":"✕"}</span>
+    <span><b>${l.lvl}-саты · ${l.sub}.</b> ${l.q}<small>${l.ok?l.why:"Дұрыс жауап: "+l.ans}</small></span></div>`).join("");
+  S.formUrl=FORM+"&"+FQ.name+"="+encodeURIComponent(S.name)
+    +"&"+FQ.cls+"="+encodeURIComponent(S.cls)
+    +"&"+FQ.score+"="+encodeURIComponent(S.score)
+    +"&"+FQ.lvl+"="+encodeURIComponent(lvl+"/15")
+    +"&"+FQ.rank+"="+encodeURIComponent(rank);
+  writeLock({status:"done",name:S.name,cls:S.cls,score:S.score,lvl:lvl,rank:rank,date:new Date().toLocaleDateString("kk-KZ")});
+  show("over");
+}
+
+$("sendBtn").onclick=async()=>{
+  let w=null; try{ w=window.open(S.formUrl,"_blank","noopener") }catch(e){}
+  if(w){ $("sendBtn").textContent="Форма ашылды ✓"; $("sendBtn").classList.add("ghost"); return }
+  try{ await navigator.clipboard.writeText(S.formUrl);
+    $("sendBtn").textContent="Сілтеме көшірілді ✓ — браузерге қой";
+    setTimeout(()=>$("sendBtn").textContent="Нәтижені тіркеу 📨",4000) }
+  catch(e){ $("sendBtn").textContent="Плакаттағы кіші QR кодты сканерле" }
+};
+
+$("copyBtn").onclick=async()=>{
+  const txt=`Ғылым Баспалдағы · ${S.name} (${S.cls}): ${S.score} ұпай, ${S.fail?S.lvl:15}/15 саты, дәреже — ${$("resRank").textContent}.`;
+  try{ await navigator.clipboard.writeText(txt); $("copyBtn").textContent="Көшірілді ✓"; setTimeout(()=>$("copyBtn").textContent="Нәтижені көшіру",1800) }
+  catch(e){ $("copyBtn").textContent="Көшіру мүмкін болмады" }
+};
+</script>
